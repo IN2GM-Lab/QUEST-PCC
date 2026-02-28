@@ -16,7 +16,38 @@ QUEST-PCC is designed to support research in volumetric adaptive streaming, cont
 
 ---
 
-🚧 **Dataset Release: Coming Soon**
+## 📦 Dataset Release
 
-The full dataset (bitstreams, reconstructed sequences, and evaluation metrics) will be released publicly soon.  
-Stay tuned for updates.
+The full dataset (bitstreams, reconstructed sequences, and evaluation metrics) is now publicly available.
+
+🔗 **Download here:**  
+<a href="[YOUR_DRIVE_LINK](https://drive.google.com/drive/folders/1HKYqNgmdU2KyiLmnzftzfPB_whFBvkx_)" target="_blank"><b>Google Drive – QUEST-PCC Dataset</b></a>
+
+If you use this dataset in your research, please cite our paper (citation coming soon).
+
+For questions or issues, please open a GitHub issue.
+
+## ACM Reference Format
+
+```text
+Sidhu, J. S., Bentaleb, A., Hamza, A. and Gudumasu S. 2026.
+QUEST-PCC: A Reference Dataset for Content-Aware V-PCC Streaming and Compression.
+In Proceedings of the 17th ACM Multimedia Systems Conference 2026 (MMSys '26),
+April 4-8, 2026, Hong Kong, Hong Kong. ACM, New York, NY, USA, 6 pages.
+https://doi.org/10.1145/3793853.3799809
+```
+
+### BibTeX
+
+```bibtex
+@inproceedings{sidhu2026quest,
+  author    = {Sidhu, Jashanjot Singh and Bentaleb, Abdelhak and Hamza, Ahmed and Gudumasu, Srinivas},
+  title     = {QUEST-PCC: A Reference Dataset for Content-Aware V-PCC Streaming and Compression},
+  booktitle = {Proceedings of the 17th ACM Multimedia Systems Conference 2026 (MMSys '26)},
+  year      = {2026},
+  month     = apr,
+  address   = {Hong Kong, Hong Kong},
+  publisher = {ACM},
+  doi       = {10.1145/3793853.3799809}
+}
+```
