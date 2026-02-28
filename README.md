@@ -21,11 +21,12 @@ QUEST-PCC is designed to support research in volumetric adaptive streaming, cont
 The full dataset (bitstreams, reconstructed sequences, and evaluation metrics) is now publicly available.
 
 🔗 **Download here:**  
-<a href="[YOUR_DRIVE_LINK](https://drive.google.com/drive/folders/1HKYqNgmdU2KyiLmnzftzfPB_whFBvkx_)" target="_blank"><b>Google Drive – QUEST-PCC Dataset</b></a>
+[Google Drive – QUEST-PCC Dataset](https://drive.google.com/drive/folders/1HKYqNgmdU2KyiLmnzftzfPB_whFBvkx_)
 
-If you use this dataset in your research, please cite our paper (citation coming soon).
+If you use QUEST-PCC in your research, please cite our paper. 
 
 For questions or issues, please open a GitHub issue.
+
 
 ## ACM Reference Format
 
