@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QUEST-PCC – Content-Aware V-PCC Dataset</title>
+  <meta name="description" content="QUEST-PCC: An open-source reference dataset for objective quality-driven evaluation of heterogeneous dynamic point clouds encoded using MPEG V-PCC. Presented at ACM MMSys 2026." />
+  <style>
+    :root {
+      --bg: #07090f;
+      --surface: #0d1117;
+      --surface2: #161b27;
+      --border: #1e2a40;
+      --accent: #3b82f6;
+      --accent2: #8b5cf6;
+      --accent3: #06b6d4;
+      --text: #e2e8f0;
+      --muted: #8b9ab5;
+      --green: #10b981;
+      --radius: 12px;
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+
+    /* ── NAVIGATION ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      background: rgba(7,9,15,.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 60px;
+    }
+    .nav-logo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+    }
+    .nav-links { display: flex; gap: 1.75rem; list-style: none; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: .85rem;
+      font-weight: 500;
+      transition: color .2s;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+    }
+    .nav-links a:hover { color: var(--accent); }
+
+    /* ── HERO ── */
+    #hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 6rem 1.5rem 4rem;
+      overflow: hidden;
+    }
+    #hero-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: rgba(59,130,246,.12);
+      border: 1px solid rgba(59,130,246,.3);
+      color: var(--accent);
+      font-size: .78rem;
+      font-weight: 600;
+      padding: .35rem .9rem;
+      border-radius: 999px;
+      margin-bottom: 1.5rem;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 1;
+    }
+    .badge-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: .5; transform: scale(.7); }
+    }
+    .hero-title {
+      font-size: clamp(2.6rem, 6vw, 5rem);
+      font-weight: 900;
+      letter-spacing: -.04em;
+      line-height: 1.05;
+      margin-bottom: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #67e8f9 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 680px;
+      margin: 0 auto 2.25rem;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-sub strong { color: var(--text); }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      margin-bottom: 3rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .72rem 1.6rem;
+      border-radius: var(--radius);
+      font-size: .95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all .2s;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      box-shadow: 0 0 32px rgba(59,130,246,.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 48px rgba(59,130,246,.45); }
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+    .btn-ghost {
+      background: rgba(139,92,246,.12);
+      color: #a78bfa;
+      border: 1px solid rgba(139,92,246,.25);
+    }
+    .btn-ghost:hover { background: rgba(139,92,246,.2); transform: translateY(-2px); }
+
+    /* hero stat strip */
+    .hero-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat .val {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent3));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: block;
+      line-height: 1;
+    }
+    .hero-stat .lbl {
+      font-size: .78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-top: .25rem;
+    }
+    .stat-divider {
+      width: 1px;
+      background: var(--border);
+      align-self: stretch;
+    }
+
+    /* ── SECTION SHARED ── */
+    section { padding: 6rem 1.5rem; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-size: .75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--accent);
+      margin-bottom: .75rem;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 800;
+      letter-spacing: -.03em;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+    .section-desc {
+      color: var(--muted);
+      max-width: 640px;
+      font-size: 1rem;
+    }
+    .section-header { margin-bottom: 3.5rem; }
+
+    /* ── ABOUT CARDS ── */
+    #about { background: var(--surface); }
+    .about-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .about-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      transition: border-color .2s, transform .2s;
+    }
+    .about-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+    .card-icon {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: .5rem;
+      color: var(--text);
+    }
+    .card-desc { font-size: .875rem; color: var(--muted); }
+
+    /* ── DATASET GALLERY ── */
+    #dataset { background: var(--bg); }
+    .category-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .6rem;
+      margin-bottom: 2.5rem;
+    }
+    .tab-btn {
+      padding: .45rem 1.1rem;
+      border-radius: 999px;
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--muted);
+      transition: all .2s;
+    }
+    .tab-btn.active, .tab-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(59,130,246,.1);
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 1.25rem;
+    }
+    .obj-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: all .25s;
+      cursor: pointer;
+      display: none;
+    }
+    .obj-card.visible { display: block; }
+    .obj-card:hover { border-color: var(--accent2); transform: scale(1.04); box-shadow: 0 8px 32px rgba(0,0,0,.4); }
+    .obj-img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: contain;
+      background: #0a0e1a;
+      padding: 1rem;
+    }
+    .obj-info { padding: .7rem .85rem; }
+    .obj-name {
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: .2rem;
+    }
+    .obj-cat {
+      font-size: .72rem;
+      color: var(--accent2);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    /* category color map */
+    .cat-vehicle   { color: #f59e0b; }
+    .cat-people    { color: #ec4899; }
+    .cat-arch      { color: #10b981; }
+    .cat-artifact  { color: var(--accent3); }
+    .cat-animal    { color: #f97316; }
+    .cat-furniture { color: var(--accent2); }
+
+    /* ── USE CASES ── */
+    #usecases { background: var(--surface); }
+    .use-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+    }
+    .use-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      position: relative;
+      overflow: hidden;
+      transition: all .25s;
+    }
+    .use-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: 0;
+      transition: opacity .25s;
+    }
+    .use-card:hover::before { opacity: 1; }
+    .use-card:hover { border-color: rgba(59,130,246,.3); transform: translateY(-3px); }
+    .use-icon { font-size: 2rem; margin-bottom: 1rem; display: block; }
+    .use-title { font-size: 1rem; font-weight: 700; margin-bottom: .5rem; }
+    .use-desc { font-size: .875rem; color: var(--muted); }
+
+    /* ── RESULTS ── */
+    #results { background: var(--bg); }
+    .results-intro {
+      color: var(--muted);
+      max-width: 700px;
+      margin-bottom: 3rem;
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+    .figures-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    .fig-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+    .fig-card:hover { border-color: var(--accent); }
+    .fig-card img, .fig-card object {
+      width: 100%;
+      display: block;
+      background: #fff;
+    }
+    .fig-card object { height: 260px; }
+    .fig-cap {
+      padding: .85rem 1rem;
+      font-size: .82rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+    .fig-cap strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+    /* Key findings */
+    .findings-list {
+      margin-top: 3rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+    .finding {
+      background: var(--surface2);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 1.25rem 1.5rem;
+    }
+    .finding p { font-size: .875rem; color: var(--muted); }
+    .finding strong { color: var(--text); display: block; margin-bottom: .35rem; font-size: .95rem; }
+
+    /* ── AUTHORS ── */
+    #authors { background: var(--surface); }
+    .authors-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+    }
+    .author-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      text-align: center;
+      transition: all .25s;
+    }
+    .author-card:hover { border-color: var(--accent2); transform: translateY(-3px); }
+    .author-avatar {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      margin: 0 auto 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #fff;
+    }
+    .av1 { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .av2 { background: linear-gradient(135deg, #8b5cf6, #5b21b6); }
+    .av3 { background: linear-gradient(135deg, #06b6d4, #0369a1); }
+    .av4 { background: linear-gradient(135deg, #10b981, #065f46); }
+    .author-name { font-size: 1rem; font-weight: 700; margin-bottom: .3rem; }
+    .author-inst { font-size: .82rem; color: var(--accent); font-weight: 600; margin-bottom: .2rem; }
+    .author-loc { font-size: .78rem; color: var(--muted); }
+
+    /* conference badge */
+    .conference-box {
+      background: linear-gradient(135deg, rgba(59,130,246,.1), rgba(139,92,246,.1));
+      border: 1px solid rgba(59,130,246,.25);
+      border-radius: var(--radius);
+      padding: 1.5rem 2rem;
+      margin-bottom: 3.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .conf-icon { font-size: 2.5rem; }
+    .conf-name { font-weight: 800; font-size: 1.05rem; color: var(--text); }
+    .conf-detail { font-size: .875rem; color: var(--muted); }
+    .conf-doi a {
+      color: var(--accent);
+      font-size: .82rem;
+      text-decoration: none;
+    }
+    .conf-doi a:hover { text-decoration: underline; }
+
+    /* ── CITATION ── */
+    #citation { background: var(--bg); }
+    .citation-tabs {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 1.5rem;
+    }
+    .ctab {
+      padding: .45rem 1.1rem;
+      border-radius: var(--radius) var(--radius) 0 0;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      color: var(--muted);
+      transition: all .2s;
+    }
+    .ctab.active { background: var(--surface); color: var(--accent); border-color: rgba(59,130,246,.3); }
+    .citation-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0 var(--radius) var(--radius) var(--radius);
+      padding: 1.75rem;
+      position: relative;
+    }
+    .citation-box pre {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+      font-size: .82rem;
+      color: #93c5fd;
+      white-space: pre-wrap;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+    .citation-box pre .kw { color: #c084fc; }
+    .citation-box pre .val { color: #86efac; }
+    .citation-box pre .str { color: #fbbf24; }
+    .copy-btn {
+      position: absolute;
+      top: 1rem; right: 1rem;
+      background: rgba(59,130,246,.15);
+      border: 1px solid rgba(59,130,246,.3);
+      color: var(--accent);
+      border-radius: 8px;
+      padding: .35rem .8rem;
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .copy-btn:hover { background: rgba(59,130,246,.25); }
+    .copy-btn.copied { color: var(--green); border-color: rgba(16,185,129,.3); background: rgba(16,185,129,.1); }
+    .ctab-content { display: none; }
+    .ctab-content.active { display: block; }
+
+    /* ── LICENSE ── */
+    #license { background: var(--surface); }
+    .license-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .license-icon { font-size: 3.5rem; }
+    .license-title { font-size: 1.3rem; font-weight: 800; color: var(--green); margin-bottom: .5rem; }
+    .license-desc { color: var(--muted); font-size: .9rem; margin-bottom: 1rem; }
+    .license-pills { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .pill {
+      background: rgba(16,185,129,.1);
+      border: 1px solid rgba(16,185,129,.25);
+      color: var(--green);
+      border-radius: 999px;
+      font-size: .78rem;
+      font-weight: 600;
+      padding: .3rem .8rem;
+    }
+
+    /* ── DOWNLOAD CTA ── */
+    #download {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1a40 50%, #0f172a 100%);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 5rem 1.5rem;
+      text-align: center;
+    }
+    #download h2 {
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      font-weight: 800;
+      margin-bottom: 1rem;
+    }
+    #download p { color: var(--muted); max-width: 520px; margin: 0 auto 2rem; }
+    .dl-actions { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── ENCODING TABLE ── */
+    .enc-table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 500px;
+      margin: 2rem 0;
+      font-size: .875rem;
+    }
+    .enc-table th {
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      padding: .6rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .enc-table td {
+      padding: .6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    .enc-table tr:last-child td { border-bottom: none; }
+    .rate-badge {
+      background: rgba(59,130,246,.15);
+      color: var(--accent);
+      border-radius: 4px;
+      padding: .15rem .5rem;
+      font-weight: 700;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      nav { padding: 0 1rem; }
+      .nav-links { gap: 1rem; }
+      .nav-links a { font-size: .75rem; }
+      .stat-divider { display: none; }
+      .hero-stats { gap: 1.25rem; }
+    }
+
+    /* ── SCROLL ANIMATIONS ── */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── DATASET INFO STRIP ── */
+    .info-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 3rem;
+    }
+    .info-cell {
+      background: var(--surface2);
+      padding: 1.25rem 1.5rem;
+      text-align: center;
+    }
+    .info-cell .num {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      display: block;
+    }
+    .info-cell .lbl {
+      font-size: .78rem;
+      color: var(--muted);
+      margin-top: .25rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    /* slideshow in hero */
+    .hero-slideshow {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .slide-img {
+      position: absolute;
+      width: 130px;
+      opacity: 0;
+      border-radius: 12px;
+      filter: grayscale(.4) brightness(.6);
+      animation: float-img 16s ease-in-out infinite;
+    }
+    @keyframes float-img {
+      0%   { opacity: 0; transform: translateY(20px) scale(.9) rotate(-3deg); }
+      15%  { opacity: .35; }
+      85%  { opacity: .35; }
+      100% { opacity: 0; transform: translateY(-20px) scale(1.05) rotate(3deg); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ NAV ═══════════════════════════════ -->
+<nav>
+  <span class="nav-logo">QUEST-PCC</span>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#dataset">Dataset</a></li>
+    <li><a href="#usecases">Use Cases</a></li>
+    <li><a href="#results">Results</a></li>
+    <li><a href="#authors">Authors</a></li>
+    <li><a href="#citation">Cite</a></li>
+  </ul>
+</nav>
+
+<!-- ═══════════════════════════════ HERO ══════════════════════════════ -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+
+  <!-- floating point-cloud previews -->
+  <div class="hero-slideshow" aria-hidden="true">
+    <img class="slide-img" src="Figures/nasa.png"       style="top:12%;left:5%;animation-delay:0s;width:110px"/>
+    <img class="slide-img" src="Figures/gorilla.png"    style="top:60%;left:3%;animation-delay:2s;width:100px"/>
+    <img class="slide-img" src="Figures/windmill.png"   style="top:25%;right:6%;animation-delay:1s;width:120px"/>
+    <img class="slide-img" src="Figures/gyroscope.png"  style="top:70%;right:4%;animation-delay:3.5s;width:105px"/>
+    <img class="slide-img" src="Figures/eagle.png"      style="top:80%;left:18%;animation-delay:5s;width:90px"/>
+    <img class="slide-img" src="Figures/wardrobe.png"   style="top:15%;right:22%;animation-delay:6.5s;width:95px"/>
+    <img class="slide-img" src="Figures/whale.png"      style="top:55%;right:20%;animation-delay:8s;width:115px"/>
+    <img class="slide-img" src="Figures/earth.png"      style="top:82%;right:14%;animation-delay:4s;width:90px"/>
+  </div>
+
+  <div class="hero-badge">
+    <span class="badge-dot"></span>
+    ACM MMSys 2026 &nbsp;·&nbsp; Hong Kong
+  </div>
+
+  <h1 class="hero-title">
+    <span class="gradient-text">QUEST-PCC</span><br />
+    A Reference Dataset for<br />Content-Aware V-PCC
+  </h1>
+
+  <p class="hero-sub">
+    An open-source benchmark of <strong>21 heterogeneous dynamic point clouds</strong> across
+    6 object categories, encoded with MPEG V-PCC at 5 quality levels with
+    standardized rate–distortion metrics.
+  </p>
+
+  <div class="hero-actions">
+    <a class="btn btn-primary"
+       href="https://drive.google.com/drive/folders/1HKYqNgmdU2KyiLmnzftzfPB_whFBvkx_"
+       target="_blank" rel="noopener">
+      ⬇ Download Dataset
+    </a>
+    <a class="btn btn-ghost"
+       href="https://doi.org/10.1145/3793853.3799809"
+       target="_blank" rel="noopener">
+      📄 Read the Paper
+    </a>
+    <a class="btn btn-outline"
+       href="https://github.com/IN2GM-Lab/QUEST-PCC"
+       target="_blank" rel="noopener">
+      ⭐ GitHub
+    </a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <span class="val" data-target="21">0</span>
+      <span class="lbl">Point Cloud Sequences</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="hero-stat">
+      <span class="val" data-target="6">0</span>
+      <span class="lbl">Object Categories</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="hero-stat">
+      <span class="val" data-target="5">0</span>
+      <span class="lbl">Quality Levels (r1–r5)</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="hero-stat">
+      <span class="val" data-target="250">0</span>
+      <span class="lbl">Frames per Sequence</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="hero-stat">
+      <span class="val">80+</span>
+      <span class="lbl">Mbps Max Bitrate</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ ABOUT ════════════════════════════ -->
+<section id="about">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label">Overview</div>
+      <h2 class="section-title">What is QUEST-PCC?</h2>
+      <p class="section-desc">
+        QUEST-PCC fills a critical gap in volumetric media research. Unlike existing
+        human-centric datasets, it captures the full diversity of real-world 3D content,
+        enabling content-aware compression and streaming research.
+      </p>
+    </div>
+
+    <div class="about-grid">
+      <div class="about-card fade-in">
+        <span class="card-icon">🎯</span>
+        <div class="card-title">Content-Diverse</div>
+        <p class="card-desc">
+          Six object categories — Vehicle, People, Architecture, Artifact, Animal, and
+          Furniture — covering rigid, articulated, and non-human geometries rarely found
+          in existing datasets.
+        </p>
+      </div>
+      <div class="about-card fade-in">
+        <span class="card-icon">🗜️</span>
+        <div class="card-title">MPEG V-PCC Encoded</div>
+        <p class="card-desc">
+          All sequences encoded with the MPEG TMC2 v25.0 reference software using five
+          standardized rate configurations (r1–r5), enabling reproducible and fair
+          rate–distortion comparison.
+        </p>
+      </div>
+      <div class="about-card fade-in">
+        <span class="card-icon">📊</span>
+        <div class="card-title">Rich Quality Metrics</div>
+        <p class="card-desc">
+          Per-frame MPEG PCC metrics: MSE Point-to-Point, PSNR Point-to-Point, and
+          RGB PSNR (R, G, B channels). Fully computed and bundled — no re-encoding needed.
+        </p>
+      </div>
+      <div class="about-card fade-in">
+        <span class="card-icon">🔁</span>
+        <div class="card-title">Fully Reproducible</div>
+        <p class="card-desc">
+          Encoding scripts, configuration files, and evaluation pipelines are released
+          alongside data, enabling researchers to extend, adapt, or verify results
+          independently.
+        </p>
+      </div>
+      <div class="about-card fade-in">
+        <span class="card-icon">🌐</span>
+        <div class="card-title">Streaming-Ready</div>
+        <p class="card-desc">
+          Bitrate ladders from sub-1 Mbps to ~80 Mbps are designed to match realistic
+          adaptive streaming operating ranges for immersive 6DoF volumetric media delivery.
+        </p>
+      </div>
+      <div class="about-card fade-in">
+        <span class="card-icon">🔓</span>
+        <div class="card-title">Open Source</div>
+        <p class="card-desc">
+          Released under the Apache 2.0 License. Free for academic and commercial use,
+          redistribution, and modification — with proper attribution.
+        </p>
+      </div>
+    </div>
+
+    <!-- Encoding table -->
+    <div class="fade-in" style="margin-top:3.5rem">
+      <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:.75rem;color:var(--text)">
+        V-PCC Encoding Configurations (MPEG TMC2)
+      </h3>
+      <p style="font-size:.875rem;color:var(--muted);margin-bottom:1.25rem">
+        All sequences were encoded with a unified all-intra configuration. Rate levels
+        jointly control geometry and attribute quantization parameters.
+      </p>
+      <table class="enc-table">
+        <thead>
+          <tr>
+            <th>Rate</th>
+            <th>Geometry QP</th>
+            <th>Attribute QP</th>
+            <th>Occ. Precision</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="rate-badge">r1</span></td><td>32</td><td>42</td><td>4</td></tr>
+          <tr><td><span class="rate-badge">r2</span></td><td>28</td><td>37</td><td>4</td></tr>
+          <tr><td><span class="rate-badge">r3</span></td><td>24</td><td>32</td><td>4</td></tr>
+          <tr><td><span class="rate-badge">r4</span></td><td>20</td><td>27</td><td>4</td></tr>
+          <tr><td><span class="rate-badge">r5</span></td><td>16</td><td>22</td><td>2</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ DATASET ═══════════════════════════ -->
+<section id="dataset">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label">Content</div>
+      <h2 class="section-title">21 Dynamic Point Cloud Sequences</h2>
+      <p class="section-desc">
+        Curated from the PKU-DPCC dataset and systematically re-encoded under a unified
+        V-PCC pipeline. Browse all sequences by category below.
+      </p>
+    </div>
+
+    <!-- stats strip -->
+    <div class="info-strip fade-in">
+      <div class="info-cell">
+        <span class="num">3</span>
+        <span class="lbl">Vehicle sequences</span>
+      </div>
+      <div class="info-cell">
+        <span class="num">1</span>
+        <span class="lbl">People sequence</span>
+      </div>
+      <div class="info-cell">
+        <span class="num">3</span>
+        <span class="lbl">Architecture seqs</span>
+      </div>
+      <div class="info-cell">
+        <span class="num">6</span>
+        <span class="lbl">Artifact sequences</span>
+      </div>
+      <div class="info-cell">
+        <span class="num">4</span>
+        <span class="lbl">Animal sequences</span>
+      </div>
+      <div class="info-cell">
+        <span class="num">4</span>
+        <span class="lbl">Furniture sequences</span>
+      </div>
+    </div>
+
+    <!-- tabs -->
+    <div class="category-tabs fade-in">
+      <button class="tab-btn active" data-cat="all">All (21)</button>
+      <button class="tab-btn" data-cat="vehicle" style="--ac:#f59e0b">🚗 Vehicle</button>
+      <button class="tab-btn" data-cat="people"  style="--ac:#ec4899">🧍 People</button>
+      <button class="tab-btn" data-cat="arch"    style="--ac:#10b981">🏛 Architecture</button>
+      <button class="tab-btn" data-cat="artifact" style="--ac:#06b6d4">🔮 Artifact</button>
+      <button class="tab-btn" data-cat="animal"  style="--ac:#f97316">🦁 Animal</button>
+      <button class="tab-btn" data-cat="furniture" style="--ac:#8b5cf6">🪑 Furniture</button>
+    </div>
+
+    <div class="gallery-grid" id="gallery">
+      <!-- Vehicle -->
+      <div class="obj-card visible" data-cat="vehicle">
+        <img class="obj-img" src="Figures/nasa.png" alt="NASA Rover point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">NASA Rover</div>
+          <div class="obj-cat cat-vehicle">Vehicle</div>
+        </div>
+      </div>
+      <div class="obj-card visible" data-cat="vehicle">
+        <img class="obj-img" src="Figures/helicopter.png" alt="Helicopter point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Helicopter</div>
+          <div class="obj-cat cat-vehicle">Vehicle</div>
+        </div>
+      </div>
+      <!-- Car not in PNG list, use placeholder styling -->
+      <div class="obj-card visible" data-cat="vehicle">
+        <div class="obj-img" style="display:flex;align-items:center;justify-content:center;font-size:3.5rem;">🚗</div>
+        <div class="obj-info">
+          <div class="obj-name">Car</div>
+          <div class="obj-cat cat-vehicle">Vehicle</div>
+        </div>
+      </div>
+
+      <!-- People -->
+      <div class="obj-card visible" data-cat="people">
+        <img class="obj-img" src="Figures/dancingman.png" alt="Dancing Man point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Dancing Man</div>
+          <div class="obj-cat cat-people">People</div>
+        </div>
+      </div>
+
+      <!-- Architecture -->
+      <div class="obj-card visible" data-cat="arch">
+        <img class="obj-img" src="Figures/windmill.png" alt="Windmill point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Windmill</div>
+          <div class="obj-cat cat-arch">Architecture</div>
+        </div>
+      </div>
+      <div class="obj-card visible" data-cat="arch">
+        <img class="obj-img" src="Figures/house.png" alt="House point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">House</div>
+          <div class="obj-cat cat-arch">Architecture</div>
+        </div>
+      </div>
+      <div class="obj-card visible" data-cat="arch">
+        <img class="obj-img" src="Figures/carousel.png" alt="Carousel point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Carousel</div>
+          <div class="obj-cat cat-arch">Architecture</div>
+        </div>
+      </div>
+
+      <!-- Artifact -->
+      <div class="obj-card visible" data-cat="artifact">
+        <img class="obj-img" src="Figures/coffin.png" alt="Coffin point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Coffin</div>
+          <div class="obj-cat cat-artifact">Artifact</div>
+        </div>
+      </div>
+      <div class="obj-card visible" data-cat="artifact">
+        <img class="obj-img" src="Figures/earth.png" alt="Earth point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Earth</div>
+          <div class="obj-cat cat-artifact">Artifact</div>
+        </div>
+      </div>
+      <div class="obj-card visible" data-cat="artifact">
+        <img class="obj-img" src="Figures/chess.png" alt="Chess Game point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Chess Game</div>
+          <div class="obj-cat cat-artifact">Artifact</div>
+        </div>
+      </div>
+      <div class="obj-card visible" data-cat="artifact">
+        <img class="obj-img" src="Figures/gyroscope.png" alt="Gyroscope point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Gyroscope</div>
+          <div class="obj-cat cat-artifact">Artifact</div>
+        </div>
+      </div>
+      <div class="obj-card visible" data-cat="artifact">
+        <img class="obj-img" src="Figures/flower.png" alt="Flower point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Flower</div>
+          <div class="obj-cat cat-artifact">Artifact</div>
+        </div>
+      </div>
+      <div class="obj-card visible" data-cat="artifact">
+        <img class="obj-img" src="Figures/boat.png" alt="Boat point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Boat</div>
+          <div class="obj-cat cat-artifact">Artifact</div>
+        </div>
+      </div>
+
+      <!-- Animal -->
+      <div class="obj-card visible" data-cat="animal">
+        <img class="obj-img" src="Figures/whale.png" alt="Whale point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Whale</div>
+          <div class="obj-cat cat-animal">Animal</div>
+        </div>
+      </div>
+      <div class="obj-card visible" data-cat="animal">
+        <img class="obj-img" src="Figures/gorilla.png" alt="Gorilla point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Gorilla</div>
+          <div class="obj-cat cat-animal">Animal</div>
+        </div>
+      </div>
+      <div class="obj-card visible" data-cat="animal">
+        <img class="obj-img" src="Figures/rabbit.png" alt="Rabbit point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Rabbit</div>
+          <div class="obj-cat cat-animal">Animal</div>
+        </div>
+      </div>
+      <div class="obj-card visible" data-cat="animal">
+        <img class="obj-img" src="Figures/eagle.png" alt="Eagle point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Eagle</div>
+          <div class="obj-cat cat-animal">Animal</div>
+        </div>
+      </div>
+
+      <!-- Furniture -->
+      <div class="obj-card visible" data-cat="furniture">
+        <img class="obj-img" src="Figures/wardrobe.png" alt="Wardrobe point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Wardrobe</div>
+          <div class="obj-cat cat-furniture">Furniture</div>
+        </div>
+      </div>
+      <div class="obj-card visible" data-cat="furniture">
+        <img class="obj-img" src="Figures/gramophone.png" alt="Gramophone point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Gramophone</div>
+          <div class="obj-cat cat-furniture">Furniture</div>
+        </div>
+      </div>
+      <div class="obj-card visible" data-cat="furniture">
+        <img class="obj-img" src="Figures/fridge.png" alt="Fridge point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Fridge</div>
+          <div class="obj-cat cat-furniture">Furniture</div>
+        </div>
+      </div>
+      <div class="obj-card visible" data-cat="furniture">
+        <img class="obj-img" src="Figures/door.png" alt="Door point cloud" loading="lazy"/>
+        <div class="obj-info">
+          <div class="obj-name">Door</div>
+          <div class="obj-cat cat-furniture">Furniture</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ USE CASES ════════════════════════ -->
+<section id="usecases">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label">Applications</div>
+      <h2 class="section-title">Where is QUEST-PCC Useful?</h2>
+      <p class="section-desc">
+        Designed for systems-level research on volumetric media — not perceptual studies.
+        QUEST-PCC is the right benchmark for the following research areas.
+      </p>
+    </div>
+
+    <div class="use-grid">
+      <div class="use-card fade-in">
+        <span class="use-icon">📡</span>
+        <div class="use-title">Adaptive Volumetric Streaming</div>
+        <p class="use-desc">
+          Build and evaluate DASH/RTP-based adaptive bitrate algorithms for 6DoF point
+          cloud delivery, leveraging realistic content-dependent bitrate ladders spanning
+          sub-1 Mbps to 80 Mbps.
+        </p>
+      </div>
+      <div class="use-card fade-in">
+        <span class="use-icon">🧠</span>
+        <div class="use-title">Content-Aware Encoding</div>
+        <p class="use-desc">
+          Study how object topology, motion complexity, and surface geometry drive
+          encoding bitrate — enabling smarter, content-adaptive encoder parameter selection
+          beyond traditional one-size-fits-all configurations.
+        </p>
+      </div>
+      <div class="use-card fade-in">
+        <span class="use-icon">📈</span>
+        <div class="use-title">Bitrate Ladder Construction</div>
+        <p class="use-desc">
+          Design per-content or per-category bitrate ladders. The dataset's content
+          diversity reveals how ladder spacing must adapt to structural complexity and
+          motion dynamics for each object class.
+        </p>
+      </div>
+      <div class="use-card fade-in">
+        <span class="use-icon">🔬</span>
+        <div class="use-title">Rate–Distortion Analysis</div>
+        <p class="use-desc">
+          Conduct systematic RD analysis using MPEG-standardized P2P and PSNR metrics.
+          Investigate how geometry fidelity and attribute distortion correlate across
+          object categories and quality levels.
+        </p>
+      </div>
+      <div class="use-card fade-in">
+        <span class="use-icon">🕹️</span>
+        <div class="use-title">Immersive XR &amp; 6DoF Systems</div>
+        <p class="use-desc">
+          Benchmark VR, AR, and mixed reality delivery pipelines for dynamic volumetric
+          content. Validate V3C codec profiles against non-human objects that challenge
+          standard human-centric models.
+        </p>
+      </div>
+      <div class="use-card fade-in">
+        <span class="use-icon">⚙️</span>
+        <div class="use-title">Cross-Layer Optimization</div>
+        <p class="use-desc">
+          Explore joint encoding, network, and rendering optimizations. QUEST-PCC
+          provides the data backbone for DRL-guided, QUIC-aware, or MoQ-based
+          volumetric media delivery experiments.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ RESULTS ══════════════════════════ -->
+<section id="results">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label">Key Findings</div>
+      <h2 class="section-title">Content-Dependent Rate–Distortion</h2>
+    </div>
+
+    <p class="results-intro fade-in">
+      Through sequence- and category-level analysis, we show that encoding bitrate and
+      reconstruction quality are governed primarily by <strong>dynamic surface topology
+      and structural complexity</strong> — not point count alone. Sequences like
+      <em>Gorilla</em> and <em>Dancing Man</em> exhibit dense, irregular geometry that
+      fragments V-PCC atlas patches, dramatically inflating bitrate compared to
+      geometrically simple objects like <em>Gyroscope</em>.
+    </p>
+
+    <!-- Chart figures -->
+    <div class="figures-grid">
+      <div class="fig-card fade-in">
+        <object data="Figures/Avg_PSNR.pdf" type="application/pdf">
+          <img src="Figures/gorilla.png" alt="Avg PSNR chart" style="width:100%;padding:1rem;background:#fff"/>
+        </object>
+        <div class="fig-cap">
+          <strong>Average PSNR per Category</strong>
+          Avg. PSNR (R, G, B) across all 6 object categories at quality levels r1–r5.
+          People and Animal categories show steeper PSNR growth with bitrate.
+        </div>
+      </div>
+      <div class="fig-card fade-in">
+        <object data="Figures/Avg_Bitrate.pdf" type="application/pdf">
+          <img src="Figures/windmill.png" alt="Avg Bitrate chart" style="width:100%;padding:1rem;background:#fff"/>
+        </object>
+        <div class="fig-cap">
+          <strong>Average Encoding Bitrate per Category</strong>
+          Per-category average bitrate at each quality level. Architecture and Furniture
+          exhibit more gradual bitrate scaling than articulated categories.
+        </div>
+      </div>
+      <div class="fig-card fade-in">
+        <object data="Figures/PSNR_P2P_avg.pdf" type="application/pdf">
+          <img src="Figures/gyroscope.png" alt="PSNR P2P avg chart" style="width:100%;padding:1rem;background:#fff"/>
+        </object>
+        <div class="fig-cap">
+          <strong>PSNR Point-to-Point (Avg)</strong>
+          Geometry fidelity across sequences. Bitrate gaps between successive quality
+          levels follow approximately logarithmic spacing (1.5–2× step increases).
+        </div>
+      </div>
+      <div class="fig-card fade-in">
+        <object data="Figures/MSE_avg.pdf" type="application/pdf">
+          <img src="Figures/nasa.png" alt="MSE avg chart" style="width:100%;padding:1rem;background:#fff"/>
+        </object>
+        <div class="fig-cap">
+          <strong>MSE Point-to-Point (Avg)</strong>
+          Mean Squared Error across categories confirms monotonically decreasing
+          geometric distortion as quality level increases from r1 to r5.
+        </div>
+      </div>
+      <div class="fig-card fade-in">
+        <object data="Figures/PLY_Bitrate.pdf" type="application/pdf">
+          <img src="Figures/dancingman.png" alt="PLY Bitrate chart" style="width:100%;padding:1rem;background:#fff"/>
+        </object>
+        <div class="fig-cap">
+          <strong>Per-Sequence PLY Bitrate Analysis</strong>
+          Encoding bitrate for representative sequences per category. Dancing Man
+          requires higher bitrate than Windmill despite fewer points due to non-rigid motion.
+        </div>
+      </div>
+      <div class="fig-card fade-in">
+        <object data="Figures/Quality.pdf" type="application/pdf">
+          <img src="Figures/gorilla.png" alt="Quality progression chart" style="width:100%;padding:1rem;background:#fff"/>
+        </object>
+        <div class="fig-cap">
+          <strong>Reconstructed PLY Quality Progression</strong>
+          Visual quality of the Gorilla sequence reconstructed at r1 (lowest) through
+          r5 (highest), illustrating the rate–distortion tradeoff across quality levels.
+        </div>
+      </div>
+    </div>
+
+    <!-- Key insight cards -->
+    <div class="findings-list">
+      <div class="finding fade-in">
+        <strong>Topology Drives Bitrate</strong>
+        <p>Atlas packing efficiency — shaped by object surface topology and V3C patch
+        generation — is a stronger bitrate predictor than point count.</p>
+      </div>
+      <div class="finding fade-in">
+        <strong>Motion Inflates Cost</strong>
+        <p>Articulated motion (Dancing Man, Gorilla) causes fragmented patches and
+        high spatial entropy, yielding disproportionately high HEVC intra-frame costs.</p>
+      </div>
+      <div class="finding fade-in">
+        <strong>Geometry Outweighs Motion</strong>
+        <p>Wardrobe, despite limited motion, requires high bitrate due to dense
+        geometry and occlusion-heavy structure — geometry complexity can outweigh motion.</p>
+      </div>
+      <div class="finding fade-in">
+        <strong>Logarithmic Bitrate Spacing</strong>
+        <p>Successive quality levels produce approximately 1.5–2× bitrate steps,
+        forming realistic ladders for adaptive streaming across all content types.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ AUTHORS ════════════════════════════ -->
+<section id="authors">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label">Team</div>
+      <h2 class="section-title">Authors</h2>
+    </div>
+
+    <!-- conference info -->
+    <div class="conference-box fade-in">
+      <div class="conf-icon">🏆</div>
+      <div>
+        <div class="conf-name">ACM Multimedia Systems Conference 2026 (MMSys '26)</div>
+        <div class="conf-detail">April 4–8, 2026 &nbsp;·&nbsp; Hong Kong, Hong Kong &nbsp;·&nbsp; 6 pages</div>
+        <div class="conf-doi">
+          <a href="https://doi.org/10.1145/3793853.3799809" target="_blank" rel="noopener">
+            DOI: 10.1145/3793853.3799809 ↗
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="authors-grid">
+      <div class="author-card fade-in">
+        <div class="author-avatar av1">JS</div>
+        <div class="author-name">Jashanjot Singh Sidhu</div>
+        <div class="author-inst">Concordia University</div>
+        <div class="author-loc">Montréal, Canada</div>
+      </div>
+      <div class="author-card fade-in">
+        <div class="author-avatar av2">AB</div>
+        <div class="author-name">Abdelhak Bentaleb</div>
+        <div class="author-inst">Concordia University</div>
+        <div class="author-loc">Montréal, Canada</div>
+      </div>
+      <div class="author-card fade-in">
+        <div class="author-avatar av3">AH</div>
+        <div class="author-name">Ahmed Hamza</div>
+        <div class="author-inst">InterDigital</div>
+        <div class="author-loc">Canada</div>
+      </div>
+      <div class="author-card fade-in">
+        <div class="author-avatar av4">SG</div>
+        <div class="author-name">Srinivas Gudumasu</div>
+        <div class="author-inst">InterDigital</div>
+        <div class="author-loc">Canada</div>
+      </div>
+    </div>
+
+    <div style="margin-top:2rem;padding:1.25rem 1.5rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);font-size:.84rem;color:var(--muted)" class="fade-in">
+      <strong style="color:var(--text)">Acknowledgements:</strong>
+      This research is funded by the Natural Sciences &amp; Engineering Research Council (NSERC)
+      Discovery Grant RGPIN-2023-04744 and NSERC Alliance (ALLRP 586434-23)-Mitacs Accelerate
+      (IT36792) grant.
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ CITATION ══════════════════════════ -->
+<section id="citation">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label">Citation</div>
+      <h2 class="section-title">Cite QUEST-PCC</h2>
+      <p class="section-desc">
+        If you use QUEST-PCC in your research, please cite our paper.
+      </p>
+    </div>
+
+    <div class="fade-in">
+      <div class="citation-tabs">
+        <button class="ctab active" data-tab="bibtex">BibTeX</button>
+        <button class="ctab" data-tab="acm">ACM Format</button>
+      </div>
+
+      <div class="ctab-content active" id="tab-bibtex">
+        <div class="citation-box">
+          <button class="copy-btn" id="copy-bib">Copy</button>
+          <pre id="bib-text">@inproceedings{sidhu2026quest,
+  <span class="kw">author</span>    = {<span class="str">Sidhu, Jashanjot Singh and Bentaleb, Abdelhak and Hamza, Ahmed and Gudumasu, Srinivas</span>},
+  <span class="kw">title</span>     = {<span class="str">QUEST-PCC: A Reference Dataset for Content-Aware V-PCC Streaming and Compression</span>},
+  <span class="kw">booktitle</span> = {<span class="str">Proceedings of the 17th ACM Multimedia Systems Conference 2026 (MMSys '26)</span>},
+  <span class="kw">year</span>      = {<span class="val">2026</span>},
+  <span class="kw">month</span>     = {<span class="val">apr</span>},
+  <span class="kw">address</span>   = {<span class="str">Hong Kong, Hong Kong</span>},
+  <span class="kw">publisher</span> = {<span class="str">ACM</span>},
+  <span class="kw">doi</span>       = {<span class="val">10.1145/3793853.3799809</span>}
+}</pre>
+        </div>
+      </div>
+
+      <div class="ctab-content" id="tab-acm">
+        <div class="citation-box">
+          <button class="copy-btn" id="copy-acm">Copy</button>
+          <pre id="acm-text">Sidhu, J. S., Bentaleb, A., Hamza, A. and Gudumasu S. 2026.
+QUEST-PCC: A Reference Dataset for Content-Aware V-PCC Streaming and Compression.
+In Proceedings of the 17th ACM Multimedia Systems Conference 2026 (MMSys '26),
+April 4-8, 2026, Hong Kong, Hong Kong. ACM, New York, NY, USA, 6 pages.
+https://doi.org/10.1145/3793853.3799809</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ LICENSE ═══════════════════════════ -->
+<section id="license">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label">License</div>
+      <h2 class="section-title">Open &amp; Permissive</h2>
+    </div>
+    <div class="license-box fade-in">
+      <div class="license-icon">⚖️</div>
+      <div>
+        <div class="license-title">Apache License 2.0</div>
+        <p class="license-desc">
+          QUEST-PCC is released under the Apache License, Version 2.0. You are free to
+          use, reproduce, distribute, and create derivative works — for both academic and
+          commercial purposes — with proper attribution and without royalty.
+        </p>
+        <div class="license-pills">
+          <span class="pill">✓ Free to use</span>
+          <span class="pill">✓ Commercial use</span>
+          <span class="pill">✓ Modification allowed</span>
+          <span class="pill">✓ Distribution allowed</span>
+          <span class="pill">✓ Patent grant</span>
+          <span class="pill">ℹ Attribution required</span>
+        </div>
+        <div style="margin-top:1.25rem">
+          <a href="https://github.com/IN2GM-Lab/QUEST-PCC/blob/main/LICENSE"
+             target="_blank" rel="noopener"
+             class="btn btn-outline" style="font-size:.85rem;padding:.5rem 1.2rem">
+            View Full License Text ↗
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ DOWNLOAD CTA ════════════════════════ -->
+<section id="download">
+  <div class="container">
+    <div class="fade-in">
+      <h2>Ready to explore QUEST-PCC?</h2>
+      <p>
+        Download the full dataset — bitstreams, reconstructed PLY sequences, and
+        per-frame quality metrics — from Google Drive. No sign-up required.
+      </p>
+      <div class="dl-actions">
+        <a class="btn btn-primary"
+           href="https://drive.google.com/drive/folders/1HKYqNgmdU2KyiLmnzftzfPB_whFBvkx_"
+           target="_blank" rel="noopener">
+          ⬇ Download from Google Drive
+        </a>
+        <a class="btn btn-outline"
+           href="https://github.com/IN2GM-Lab/QUEST-PCC"
+           target="_blank" rel="noopener">
+          ⭐ View on GitHub
+        </a>
+        <a class="btn btn-ghost"
+           href="https://doi.org/10.1145/3793853.3799809"
+           target="_blank" rel="noopener">
+          📄 ACM DL Paper
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ FOOTER ════════════════════════════ -->
+<footer>
+  <p>
+    QUEST-PCC &nbsp;·&nbsp;
+    <a href="https://github.com/IN2GM-Lab/QUEST-PCC" target="_blank" rel="noopener">GitHub</a>
+    &nbsp;·&nbsp;
+    <a href="https://doi.org/10.1145/3793853.3799809" target="_blank" rel="noopener">Paper (DOI)</a>
+    &nbsp;·&nbsp;
+    Apache 2.0 License
+  </p>
+  <p style="margin-top:.5rem">
+    Sidhu, Bentaleb, Hamza &amp; Gudumasu &nbsp;·&nbsp; ACM MMSys '26, Hong Kong
+  </p>
+</footer>
+
+<!-- ═══════════════════════════════ SCRIPTS ═══════════════════════════ -->
+<script>
+/* ── STARFIELD CANVAS ── */
+(function () {
+  const canvas = document.getElementById('hero-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, pts;
+
+  function resize() {
+    W = canvas.width  = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+    init();
+  }
+
+  function init() {
+    pts = Array.from({length: 220}, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.4 + 0.3,
+      vx: (Math.random() - 0.5) * 0.18,
+      vy: (Math.random() - 0.5) * 0.18,
+      a: Math.random()
+    }));
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // gradient bg
+    const grd = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*.7);
+    grd.addColorStop(0, 'rgba(30,20,70,.35)');
+    grd.addColorStop(1, 'rgba(7,9,15,0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, W, H);
+
+    // draw connections
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i+1; j < pts.length; j++) {
+        const dx = pts[i].x - pts[j].x;
+        const dy = pts[i].y - pts[j].y;
+        const d = Math.sqrt(dx*dx + dy*dy);
+        if (d < 110) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(59,130,246,${(1-d/110)*0.12})`;
+          ctx.lineWidth = 0.5;
+          ctx.moveTo(pts[i].x, pts[i].y);
+          ctx.lineTo(pts[j].x, pts[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // draw dots
+    pts.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(147,197,253,${0.4 + p.a*0.5})`;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  draw();
+})();
+
+/* ── COUNTER ANIMATION ── */
+function animateCounter(el) {
+  const target = parseInt(el.dataset.target);
+  if (isNaN(target)) return;
+  let start = 0;
+  const duration = 1400;
+  const step = (timestamp) => {
+    if (!start) start = timestamp;
+    const progress = Math.min((timestamp - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(ease * target);
+    if (progress < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+/* ── SCROLL FADE-IN ── */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+
+      // trigger counters once when hero stats become visible
+      if (entry.target.closest('#hero')) {
+        entry.target.querySelectorAll('[data-target]').forEach(animateCounter);
+      }
+
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// trigger hero counters immediately (they're visible on load)
+document.querySelectorAll('.hero-stat .val[data-target]').forEach(el => {
+  const io = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) { animateCounter(el); io.disconnect(); }
+  }, {threshold: 0.5});
+  io.observe(el);
+});
+
+/* ── CATEGORY TABS ── */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    const cat = this.dataset.cat;
+    document.querySelectorAll('.obj-card').forEach(card => {
+      const show = cat === 'all' || card.dataset.cat === cat;
+      card.classList.toggle('visible', show);
+    });
+  });
+});
+
+/* ── CITATION TABS ── */
+document.querySelectorAll('.ctab').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.ctab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.ctab-content').forEach(c => c.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+  });
+});
+
+/* ── COPY BUTTONS ── */
+function makeCopyBtn(btnId, sourceId) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const text = document.getElementById(sourceId).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2200);
+    });
+  });
+}
+makeCopyBtn('copy-bib', 'bib-text');
+makeCopyBtn('copy-acm', 'acm-text');
+
+/* ── SMOOTH NAV HIGHLIGHT ── */
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-links a');
+const navObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(a => a.style.color = '');
+      const link = document.querySelector(`.nav-links a[href="#${entry.target.id}"]`);
+      if (link) link.style.color = 'var(--accent)';
+    }
+  });
+}, {rootMargin: '-40% 0px -55% 0px'});
+sections.forEach(s => navObserver.observe(s));
+</script>
+
+</body>
+</html>
